@@ -1,4 +1,4 @@
-// Paste your Firebase web config here (Project settings -> Your apps -> Wwindow.FIREwindow.FIREBASE_CONFIG = {
+window.FIREBASE_CONFIG = {
   apiKey: "AIzaSyDOKM1MlADQ2Z8IZMyAufQFeyVq8HOQhCk",
   authDomain: "js-tasker-pro-3b620.firebaseapp.com",
   projectId: "js-tasker-pro-3b620",
