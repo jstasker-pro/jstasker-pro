@@ -1,0 +1,235 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // ====== CHANGE THIS to your admin email (the one you created in Firebase Authentication) ======
+    function ADMIN() {
+      return request.auth != null
+        && request.auth.token.email == 'ADMIN_EMAIL_HERE'
+        && request.auth.token.firebase.sign_in_provider == 'password';
+    }
+    function signed() { return request.auth != null; }
+    function me() { return request.auth.uid; }
+    function near(a, b) { return a - b < 0.0001 && b - a < 0.0001; }
+    function P(c, id) { return /databases/$(database)/documents/$(c)/$(id); }
+    function SET() { return get(P('settings', 'app')).data; }
+    function UB(id) { return get(P('users', id)).data; }
+    function active() { return !UB(me()).banned; }
+
+    match /settings/{id} {
+      allow read: if true;
+      allow write: if ADMIN();
+    }
+
+    match /meta/counter {
+      allow read: if true;
+      allow create: if signed() && request.resource.data.n == 1;
+      allow update: if ADMIN() || (signed() && request.resource.data.n == resource.data.n + 1);
+    }
+
+    match /codes/{code} {
+      allow read: if signed();
+      allow create: if signed() && request.resource.data.uid == me();
+      allow write: if ADMIN();
+    }
+
+    match /refs/{uid} {
+      allow read: if ADMIN() || (signed() && (uid == me() || resource.data.by == me()));
+      allow create: if signed() && uid == me() && request.resource.data.by != me();
+    }
+
+    // ---------- users ----------
+    match /users/{uid} {
+      allow read: if ADMIN() || (signed() && uid == me());
+      allow create: if signed() && uid == me()
+        && request.resource.data.dep == 0 && request.resource.data.earn == 0
+        && request.resource.data.verified == false && request.resource.data.banned == false
+        && request.resource.data.done == 0
+        && request.resource.data.jsNum == get(P('meta', 'counter')).data.n
+        && getAfter(P('meta', 'counter')).data.n == request.resource.data.jsNum + 1;
+      allow update: if ADMIN() || (signed() && uid == me() && safeUser());
+      allow delete: if ADMIN();
+    }
+
+    function safeUser() {
+      let d = request.resource.data;
+      let r = resource.data;
+      let k = d.diff(r).affectedKeys();
+      return !k.hasAny(['jsId', 'jsNum', 'username', 'code', 'refBy', 'createdAt', 'banned'])
+        && (!k.hasAny(['verified']) || (d.op.type == 'verify' && d.verified == true && r.verified == false))
+        && moneyOk(d, r);
+    }
+
+    function moneyOk(d, r) {
+      return (d.dep == r.dep && d.earn == r.earn)
+        || (d.op.type == 'task'   && d.earn == r.earn && opTask(d, r))
+        || (d.op.type == 'edit'   && d.earn == r.earn && opEdit(d, r))
+        || (d.op.type == 'close'  && d.earn == r.earn && opClose(d, r))
+        || (d.op.type == 'claim'  && d.dep == r.dep && opClaim(d, r))
+        || (d.op.type == 'ref'    && d.dep == r.dep && opRef(d, r))
+        || (d.op.type == 'wd'     && d.dep == r.dep && opWd(d, r))
+        || (d.op.type == 'verify' && opVerify(d, r));
+    }
+
+    function opTask(d, r) {
+      let t = getAfter(P('tasks', d.op.id)).data;
+      return !exists(P('tasks', d.op.id))
+        && d.op.amt > 0 && near(d.dep, r.dep - d.op.amt) && d.dep >= 0
+        && t.owner == me() && t.cost == d.op.amt
+        && d.op.amt >= t.workers * t.price * (1 + SET().taskFeePct / 100) - 0.0001;
+    }
+    function opEdit(d, r) {
+      let a = getAfter(P('tasks', d.op.id)).data;
+      let b = get(P('tasks', d.op.id)).data;
+      return a.owner == me() && b.owner == me() && d.dep >= 0 && near(d.dep, r.dep - d.op.amt) && d.op.amt >= 0
+        && a.workers >= b.workers && a.price >= b.price
+        && d.op.amt >= (a.workers * a.price - b.workers * b.price) * (1 + SET().taskFeePct / 100) - 0.0001;
+    }
+    function opClose(d, r) {
+      let a = getAfter(P('tasks', d.op.id)).data;
+      let b = get(P('tasks', d.op.id)).data;
+      return b.owner == me() && b.status == 'active' && a.status == 'closed' && b.pending == 0
+        && d.op.amt >= 0 && near(d.dep, r.dep + d.op.amt)
+        && d.op.amt <= (b.workers - b.done) * b.price + 0.0001;
+    }
+    function opClaim(d, r) {
+      let a = getAfter(P('subs', d.op.id)).data;
+      let b = get(P('subs', d.op.id)).data;
+      return a.uid == me() && b.paid == false && a.paid == true && d.op.amt >= 0
+        && near(d.earn, r.earn + d.op.amt)
+        && d.op.amt <= b.price * (1 - SET().workerFeePct / 100) + 0.0001;
+    }
+    function opRef(d, r) {
+      let a = getAfter(P('reflogs', d.op.id)).data;
+      let b = get(P('reflogs', d.op.id)).data;
+      return b.to == me() && b.claimed == false && a.claimed == true
+        && near(d.earn, r.earn + b.amt) && d.op.amt == b.amt;
+    }
+    function opWd(d, r) {
+      let w = getAfter(P('withdraws', d.op.id)).data;
+      return !exists(P('withdraws', d.op.id)) && w.uid == me() && w.amt == d.op.amt && d.earn >= 0
+        && near(d.earn, r.earn - d.op.amt) && w.amt >= SET().minWd && w.status == 'pending'
+        && w.fee >= w.amt * SET().wdFeePct / 100 - 0.0001
+        && (!SET().kycWd || r.verified == true);
+    }
+    function opVerify(d, r) {
+      let f = SET().verifyFee;
+      return SET().verifyOn == true && d.dep >= 0 && d.earn >= 0
+        && ((SET().verifyFrom == 'dep' && d.earn == r.earn && near(d.dep, r.dep - f))
+         || (SET().verifyFrom == 'earn' && d.dep == r.dep && near(d.earn, r.earn - f)));
+    }
+
+    // ---------- tasks ----------
+    match /tasks/{id} {
+      allow read: if signed();
+      allow create: if signed() && active()
+        && request.resource.data.owner == me()
+        && request.resource.data.status == 'active'
+        && request.resource.data.done == 0 && request.resource.data.pending == 0
+        && request.resource.data.shots >= 1 && request.resource.data.shots <= 3
+        && request.resource.data.price >= SET().get('minP' + string(request.resource.data.shots), 0.01) - 0.0001
+        && request.resource.data.workers >= 1
+        && getAfter(P('users', me())).data.op.id == id
+        && (request.resource.data.top != true || request.resource.data.cost >= request.resource.data.workers * request.resource.data.price * (1 + SET().taskFeePct / 100) + SET().topJob * request.resource.data.days - 0.0001);
+      allow update: if ADMIN() || (signed() && taskUpd(id));
+      allow delete: if ADMIN();
+    }
+    function taskUpd(id) {
+      let d = request.resource.data;
+      let r = resource.data;
+      let k = d.diff(r).affectedKeys();
+      let sid = id + '_' + me();
+      return
+        // owner: edit (more workers / higher price)
+        (r.owner == me() && k.hasOnly(['workers', 'price', 'cost']) && getAfter(P('users', me())).data.op.type == 'edit' && getAfter(P('users', me())).data.op.id == id)
+        // owner: close and refund
+        || (r.owner == me() && k.hasOnly(['status']) && d.status == 'closed' && getAfter(P('users', me())).data.op.type == 'close' && getAfter(P('users', me())).data.op.id == id)
+        // owner: reject a proof frees a slot
+        || (r.owner == me() && k.hasOnly(['pending']) && d.pending == r.pending - 1)
+        // worker: submit proof
+        || (r.owner != me() && k.hasOnly(['pending']) && d.pending == r.pending + 1 && r.status == 'active'
+            && d.pending + d.done <= r.workers && !exists(P('subs', sid)) && existsAfter(P('subs', sid)))
+        // worker: claim payment
+        || (r.owner != me() && k.hasOnly(['pending', 'done']) && d.pending == r.pending - 1 && d.done == r.done + 1
+            && getAfter(P('subs', sid)).data.paid == true && get(P('subs', sid)).data.paid == false);
+    }
+
+    // ---------- submissions ----------
+    match /subs/{sid} {
+      allow read: if ADMIN() || (signed() && (resource.data.uid == me() || resource.data.owner == me()));
+      allow create: if signed() && active()
+        && request.resource.data.uid == me()
+        && sid == request.resource.data.taskId + '_' + me()
+        && request.resource.data.status == 'pending' && request.resource.data.paid == false
+        && get(P('tasks', request.resource.data.taskId)).data.owner == request.resource.data.owner
+        && request.resource.data.owner != me()
+        && get(P('tasks', request.resource.data.taskId)).data.status == 'active'
+        && get(P('tasks', request.resource.data.taskId)).data.price == request.resource.data.price
+        && request.resource.data.imgs.size() == get(P('tasks', request.resource.data.taskId)).data.shots
+        && (get(P('tasks', request.resource.data.taskId)).data.vo != true || UB(me()).verified == true)
+        && request.resource.data.dueAt >= request.time.toMillis() + get(P('tasks', request.resource.data.taskId)).data.days * 86400000 - 3600000;
+      allow update: if ADMIN() || (signed() && subUpd());
+    }
+    function subUpd() {
+      let d = request.resource.data;
+      let r = resource.data;
+      let k = d.diff(r).affectedKeys();
+      return
+        // buyer reviews
+        (r.owner == me() && r.status == 'pending' && k.hasOnly(['status', 'reason'])
+          && ((d.status == 'approved') || (d.status == 'rejected' && d.reason.size() >= 3)))
+        // worker claims money (approved, or buyer silent past due date)
+        || (r.uid == me() && r.paid == false && d.paid == true && k.hasOnly(['paid', 'imgs', 'status']) && d.status == 'approved'
+          && r.status != 'rejected' && (r.status == 'approved' || request.time.toMillis() > r.dueAt));
+    }
+
+    // ---------- referral payouts ----------
+    match /reflogs/{id} {
+      allow read: if ADMIN() || (signed() && (resource.data.to == me() || resource.data.from == me()));
+      allow create: if signed() && request.resource.data.from == me() && request.resource.data.claimed == false
+        && SET().refOn == true && request.resource.data.to == UB(me()).refBy
+        && ((request.resource.data.kind == 'pct' && id == request.resource.data.sub
+              && getAfter(P('subs', id)).data.paid == true
+              && request.resource.data.amt <= getAfter(P('subs', id)).data.price * SET().refPct / 100 + 0.0001)
+         || (request.resource.data.kind == 'bonus' && id == 'bonus_' + me()
+              && request.resource.data.amt <= SET().refBonus + 0.0001 && UB(me()).done >= SET().refNeed - 1));
+      allow update: if ADMIN() || (signed() && resource.data.to == me() && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['claimed']));
+    }
+
+    // ---------- money requests ----------
+    match /deposits/{id} {
+      allow read: if ADMIN() || (signed() && resource.data.uid == me());
+      allow create: if signed() && active() && request.resource.data.uid == me() && request.resource.data.status == 'pending'
+        && request.resource.data.amt >= 1 && request.resource.data.trx.size() >= 10;
+      allow update, delete: if ADMIN();
+    }
+    match /withdraws/{id} {
+      allow read: if ADMIN() || (signed() && resource.data.uid == me());
+      allow create: if signed() && active() && request.resource.data.uid == me()
+        && getAfter(P('users', me())).data.op.id == id && getAfter(P('users', me())).data.op.type == 'wd';
+      allow update, delete: if ADMIN();
+    }
+
+    // ---------- misc ----------
+    match /hist/{id} {
+      allow read: if ADMIN() || (signed() && resource.data.uid == me());
+      allow create: if ADMIN() || (signed() && request.resource.data.uid == me());
+      allow delete: if ADMIN() || (signed() && resource.data.uid == me());
+    }
+    match /notifs/{id} {
+      allow read: if ADMIN() || (signed() && resource.data.uid == me());
+      allow create: if ADMIN() || (signed() && request.resource.data.t.size() < 300);
+      allow update, delete: if ADMIN() || (signed() && resource.data.uid == me());
+    }
+    match /lb/{uid} {
+      allow read: if signed();
+      allow write: if ADMIN() || (signed() && uid == me());
+    }
+    match /tickets/{id} {
+      allow read: if ADMIN() || (signed() && resource.data.uid == me());
+      allow create: if signed() && request.resource.data.uid == me();
+      allow update: if ADMIN() || (signed() && resource.data.uid == me());
+      allow delete: if ADMIN();
+    }
+  }
+}
