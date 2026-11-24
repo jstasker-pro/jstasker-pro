@@ -41,7 +41,7 @@ function drawer(){const m=S.me;const it=(r,i,t,x)=>'<button class="dm" data-a="g
 function render(){
  if(!S.ready)return '<div class="splash"><div class="logo big">JS</div></div>';
  if(!S.uid)return auth();
- if(!S.me)return '<div class="splash"><div class="logo big">JS</div><p class="mut">Loading…</p></div>';
+ if(!S.me)return '<div class="splash"><div class="logo big">JS</div><p class="mut">Setting up your account…</p><div class="row" style="justify-content:center"><button class="btn pri" data-a="retryProfile">Retry</button><button class="btn" data-a="logout2">Logout</button></div></div>';
  if(S.me.banned)return '<div class="maint"><div><div style="font-size:48px">🚫</div><h2>Account suspended</h2><p class="mut">Please contact support.</p><button class="btn" data-a="logout">Logout</button></div></div>';
  const r=R(),n=r[0];
  if(S.set.maint&&n==='home')return '<div class="maint"><div><div style="font-size:48px">🛠️</div><h2>Under maintenance</h2><p class="mut">We will be back soon.</p></div></div>';
@@ -158,6 +158,7 @@ const A={
   const fee=r4(amt*s.wdFeePct/100),nt=r4(amt-fee);await run(async()=>{await B.reqWithdraw({method:m.name,acc:f.acc.trim(),amt,fee,net:nt,bdt:Math.round(nt*s.wdRate)});F={}},'Withdraw requested')()},
  payVerify(){modal('<h3>Verify account</h3><p class="mut">'+usd(S.set.verifyFee)+' will be taken from your '+(S.set.verifyFrom==='dep'?'Deposit':'Earned')+' balance.</p>',async()=>{await run(()=>B.payVerify(),'You are verified!')()},'Pay')},
  async saveProf(){await run(async()=>{const p={name:(F.name!=null?F.name:S.me.name).trim()||S.me.name,bio:F.bio!=null?F.bio:S.me.bio,phone:F.phone!=null?F.phone:S.me.phone};await B.saveProfile(p);if(F.pw){await B.setPassword(F.pw)}back()},'Profile saved')()},
+ retryProfile(){run(async()=>{await B.ensureProfile()},'Account ready')()},logout2(){B.logout()},
  async newTicket(){if(!(F.tsub||'').trim()||!(F.tmsg||'').trim())return toast('Write a subject and a message','err');await run(async()=>{const id=await B.ticketNew(F.tsub.trim(),F.tmsg.trim());F={};toast('Ticket sent','ok')})()},
  async reply(el){const i=$('#cin');if(!i||!i.value.trim())return;const t=i.value.trim();i.value='';await run(()=>B.ticketReply(el.dataset.id,t))()}
 };
@@ -170,7 +171,7 @@ function onFocusOut(){setTimeout(()=>{if(dirty)draw()},120);const q=document.act
 function mount(el,backend){B=backend;root=el;S=fresh();F={};UI={cat:'All',q:'',hf:'All',hp:'month',lb:'worker',mw:'my',shots:[],drawer:false,authTab:'login',ref:(new URLSearchParams(location.search).get('ref')||'').toUpperCase()};if(UI.ref)UI.authTab='reg';
  el.addEventListener('click',onClick);el.addEventListener('input',onInput);el.addEventListener('change',onChange);el.addEventListener('keydown',onKey);el.addEventListener('focusout',onFocusOut);
  unw.push(B.watch('settings',d=>{S.set=d;redraw()}));
- unAuth=B.onAuth(u=>{stopWatch2();S.ready=true;S.uid=u?u.uid:null;S.me=null;S.route=[['home']];F={};if(u){startWatch();B.syncLb&&B.syncLb().catch(()=>{});B.pruneHist&&B.pruneHist(now()-30*DAY).catch(()=>{});setTimeout(()=>B.markRead&&0,0)}draw()});
+ unAuth=B.onAuth(u=>{stopWatch2();S.ready=true;S.uid=u?u.uid:null;S.me=null;S.route=[['home']];F={};if(u){startWatch();setTimeout(()=>{if(S.uid&&!S.me&&B.ensureProfile)B.ensureProfile().catch(e=>{console.error(e);toast('Setup failed: '+(e.code||e.message),'err')})},1500);B.syncLb&&B.syncLb().catch(()=>{});B.pruneHist&&B.pruneHist(now()-30*DAY).catch(()=>{});setTimeout(()=>B.markRead&&0,0)}draw()});
  timer=setInterval(()=>{if(S.uid){after('mySubs');redraw()}},30000);draw()}
 function stopWatch2(){const keep=unw.shift();stopWatch();unw=[keep]}
 function unmount(){stopWatch();unw=[];if(unAuth)unAuth();clearInterval(timer);if(root){root.removeEventListener('click',onClick);root.removeEventListener('input',onInput);root.removeEventListener('change',onChange);root.removeEventListener('keydown',onKey);root.removeEventListener('focusout',onFocusOut);root.innerHTML=''}root=null}
