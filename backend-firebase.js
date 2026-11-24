@@ -18,7 +18,8 @@ const settings=async()=>{const s=await D('settings','app').get();return withDefa
 const myDoc=async()=>{const s=await D('users',uid()).get();if(!s.exists)throw new Error('Profile not found');return Object.assign({uid:s.id},s.data())};
 const genCode=()=>{const a='ABCDEFGHJKLMNPQRSTUVWXYZ23456789';let s='';for(let i=0;i<5;i++)s+=a[Math.floor(Math.random()*a.length)];return 'JS'+s};
 // ---------- auth ----------
-B.onAuth=cb=>auth.onAuthStateChanged(u=>cb(isUser(u)?{uid:u.uid}:null));
+B.onAuth=cb=>auth.onAuthStateChanged(u=>cb(isUser(u)?{uid:u.uid,username:u.email.split('@')[0]}:null));
+B.ensureProfile=async()=>{const u=auth.currentUser;if(!isUser(u))return;await createProfile(u.uid,u.email.split('@')[0],null)};
 async function createProfile(id,username,ref){
  if((await D('users',id).get()).exists)return;
  let referrer=null;if(ref){try{const c=await D('codes',String(ref).toUpperCase()).get();if(c.exists&&c.data().uid!==id)referrer=c.data().uid}catch(e){}}
