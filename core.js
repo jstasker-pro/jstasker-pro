@@ -34,7 +34,12 @@ const DEFAULTS={
  boost:0.5,topJob:0.5,minP1:0.01,minP2:0.02,minP3:0.03,
  cats:['YouTube','Telegram','TikTok','Facebook','Instagram'],
  methods:[{id:'bkash',name:'Bkash',col:'#fbcfe8',num:'01XXXXXXXXX',bonus:0,on:true},{id:'nagad',name:'Nagad',col:'#fed7aa',num:'01XXXXXXXXX',bonus:0,on:true},{id:'rocket',name:'Rocket',col:'#e9d5ff',num:'01XXXXXXXXX',bonus:0,on:true},{id:'binance',name:'Binance',col:'#fef08a',num:'Binance Pay ID 000000',bonus:0,on:true},{id:'usdt',name:'USDT',col:'#bbf7d0',num:'USDT (TRC20) wallet address',bonus:0,on:true}],
- workerOpts:[100,200,500,1000,2000],dayOpts:[3,5,10]
+ workerOpts:[100,200,500,1000,2000],dayOpts:[3,5,10],
+ socTg:'',socFb:'',socX:'',socYt:'',stJobs:0,stMembers:0,stDone:0,stPaid:0,activity:'',
+ pgPrivacy:'We collect only the information needed to run your account (username, activity and payment requests). We do not sell your data. Contact support to request removal of your account.',
+ pgFaq:'How do I earn? Complete tasks and upload the required proof.\nHow do I get paid? Withdraw your earned balance from the Withdraw page. Requests are reviewed manually.\nHow do I post tasks? Add funds to your deposit balance, then use Create Task.',
+ pgRefund:'Deposits are used to fund tasks. Money held for a task that is closed or removed is returned to your deposit balance. Contact support for any other refund request.',
+ pgContact:'Need help? Open a ticket from the Tickets page after logging in, or message us on Telegram.'
 };
 const withDefaults=s=>Object.assign({},DEFAULTS,s||{});
 const minPrice=(set,shots)=>set['minP'+shots]||0.01;
