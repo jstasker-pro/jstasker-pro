@@ -24,8 +24,8 @@ const catColor=(c,list)=>CATC[Math.max(0,(list||[]).indexOf(c))%CATC.length];
 const DEFAULTS={
  appName:'JS TASKER PRO',welcome:'Complete simple tasks, grow your channels and earn real money.',
  ticker:'Welcome to JS TASKER PRO  •  Post tasks, complete tasks, get paid  •  Deposits and withdrawals are reviewed manually',
- about:'JS TASKER PRO is a micro-task marketplace. Buyers promote their channels and pages. Workers complete simple tasks and get paid.',
- terms:'Fake or edited proofs lead to a permanent ban. Withdrawals are processed manually.',
+ about:'JS TASKER PRO is a micro-task marketplace where people earn by completing small online tasks and businesses get real engagement for their pages and channels. Simple work, clear payments and fair reviews - for students, job holders and business owners alike.',
+ terms:'• Complete tasks honestly. Fake, edited or reused proofs lead to a permanent ban.\n• Upload exactly the number of screenshots the task asks for.\n• Buyers must review proofs fairly. A rejection needs a clear reason.\n• Proofs that are not reviewed in time are approved automatically and the worker is paid.\n• Deposits and withdrawals are processed manually.',
  maint:false,chatOn:false,botLink:'https://t.me/YourSupportBot',
  verifyOn:true,verifyFee:1,verifyFrom:'dep',kycWd:false,
  depRate:130,wdRate:123,minDep:1,minWd:1,wdPerDay:3,
