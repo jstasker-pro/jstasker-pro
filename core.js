@@ -16,7 +16,7 @@ const P={
  star:'M12 3l2.7 5.6 6.1.9-4.4 4.3 1 6.1L12 17l-5.4 2.9 1-6.1L3.2 9.5l6.1-.9z',check:'M5 13l4 4L19 7',shield:'M12 3l8 3v6c0 5-3.5 8-8 9-4.5-1-8-4-8-9V6z',copy:'M9 9h10v10H9zM5 15V5h10',
  gift:'M4 11h16v9H4zM3 7h18v4H3zM12 7v13M12 7c-2 0-4-1-4-3s3-2 4 3c1-5 4-5 4-3s-2 3-4 3',cog:'M12 15a3 3 0 100-6 3 3 0 000 6zM19 12l2-1-2-4-2 1-2-1-1-2h-4l-1 2-2 1-2-1-2 4 2 1v2l-2 1 2 4 2-1 2 1 1 2h4l1-2 2-1 2 1 2-4-2-1z',
  ticket:'M3 8a2 2 0 002-2h14a2 2 0 002 2v2a2 2 0 000 4v2a2 2 0 00-2 2H5a2 2 0 00-2-2v-2a2 2 0 000-4z',search:'M11 18a7 7 0 100-14 7 7 0 000 14zM21 21l-5-5',pin:'M12 17v5M8 3h8l-1 7 3 3H6l3-3z',
- tag:'M3 12V4h8l10 10-8 8zM7.5 7.5h.01',trash:'M4 7h16M9 7V4h6v3M6 7l1 13h10l1-13',send:'M22 2L11 13M22 2l-7 20-4-9-9-4z',bolt:'M13 2L4 14h7l-1 8 9-12h-7z',cash:'M3 6h18v12H3zM12 15a3 3 0 100-6 3 3 0 000 6z',img:'M4 5h16v14H4zM4 16l5-5 4 4 3-3 4 4',eye:'M2 12s4-7 10-7 10 7 10 7-4 7-10 7S2 12 2 12zM12 15a3 3 0 100-6 3 3 0 000 6z',moon:'M20 14A8 8 0 0110 4a8 8 0 1010 10z'};
+ tag:'M3 12V4h8l10 10-8 8zM7.5 7.5h.01',trash:'M4 7h16M9 7V4h6v3M6 7l1 13h10l1-13',send:'M22 2L11 13M22 2l-7 20-4-9-9-4z',bolt:'M13 2L4 14h7l-1 8 9-12h-7z',cash:'M3 6h18v12H3zM12 15a3 3 0 100-6 3 3 0 000 6z',img:'M4 5h16v14H4zM4 16l5-5 4 4 3-3 4 4',download:'M12 3v12M7 10l5 5 5-5M5 21h14',lock:'M5 11h14v10H5z M8 11V7a4 4 0 0 1 8 0v4',eye:'M2 12s4-7 10-7 10 7 10 7-4 7-10 7S2 12 2 12zM12 15a3 3 0 100-6 3 3 0 000 6z',moon:'M20 14A8 8 0 0110 4a8 8 0 1010 10z'};
 const ic=n=>`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="${P[n]||P.info}"/></svg>`;
 
 const CATC=['#ef4444','#0ea5e9','#111827','#2563eb','#d946ef','#16a34a','#f59e0b','#8b5cf6','#14b8a6'];
