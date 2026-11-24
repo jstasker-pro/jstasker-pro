@@ -205,3 +205,7 @@ body.dark{--hg:#16244a;--bar:rgba(10,16,32,.92);--ico:#2a1c18;--gb:#2b3a5c;--ey:
 .dn{display:grid;place-items:center;height:34px}.dn span{width:30px;height:30px;border-radius:50%;background:linear-gradient(135deg,var(--or1),var(--or2));color:#1b0d02;display:grid;place-items:center;box-shadow:0 4px 12px rgba(255,106,31,.35);animation:bob 1.8s ease-in-out infinite}.dn svg{width:16px;height:16px}
 @keyframes bob{0%,100%{transform:translateY(-2px)}50%{transform:translateY(3px)}}
 @media (prefers-reduced-motion:reduce){.dn span{animation:none}}
+.arow{display:flex;gap:12px;align-items:flex-start;padding:11px 0;border-top:1px solid var(--line)}.arow:first-of-type{border-top:0}
+.ai{width:36px;height:36px;border-radius:12px;background:var(--soft);color:var(--g2);display:grid;place-items:center;flex:none}.ai svg{width:18px;height:18px}.ai.sm{width:30px;height:30px;border-radius:10px}
+.sech{display:flex;align-items:center;gap:10px;margin:0 0 6px}
+.arow b{font-size:14.5px}.arow .mut{font-size:13px;line-height:1.45;margin-top:2px}
