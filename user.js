@@ -23,7 +23,7 @@ let rq=0;const redraw=()=>{cancelAnimationFrame(rq);rq=requestAnimationFrame(dra
 function go(r,a){S.route.push([r,a]);UI.drawer=false;F={};UI.shots=[];draw();window.scrollTo(0,0)}
 function top(r,a){S.route=[[r,a]];UI.drawer=false;F={};UI.shots=[];draw();window.scrollTo(0,0)}
 function back(){if(S.route.length>1)S.route.pop();F={};UI.shots=[];draw()}
-function startWatch(){const w=(n,k)=>unw.push(B.watch(n,d=>{S[k||n]=d;after(n);redraw()}));
+function startWatch(){const w=(n,k)=>unw.push(B.watch(n,d=>{S[k||n]=d;if(n==='me')S.meLoaded=true;after(n);redraw()}));
  ['me','tasks','myTasks','mySubs','ownerSubs','deps','wds','notifs','hist','lb','tickets','refs','reflogs'].forEach(n=>w(n))}
 function stopWatch(){unw.forEach(f=>f());unw=[]}
 function after(n){
@@ -41,6 +41,7 @@ function drawer(){const m=S.me;const it=(r,i,t,x)=>'<button class="dm" data-a="g
 function render(){
  if(!S.ready)return '<div class="splash"><div class="logo big">JS</div></div>';
  if(!S.uid)return auth();
+ if(!S.me&&!S.meLoaded)return '<div class="splash"><div class="logo big">JS</div><p class="mut">Loading…</p></div>';
  if(!S.me)return '<div class="splash"><div class="logo big">JS</div><p class="mut">Setting up your account…</p><div class="row" style="justify-content:center"><button class="btn pri" data-a="retryProfile">Retry</button><button class="btn" data-a="logout2">Logout</button></div></div>';
  if(S.me.banned)return '<div class="maint"><div><div style="font-size:48px">🚫</div><h2>Account suspended</h2><p class="mut">Please contact support.</p><button class="btn" data-a="logout">Logout</button></div></div>';
  const r=R(),n=r[0];
@@ -171,7 +172,7 @@ function onFocusOut(){setTimeout(()=>{if(dirty)draw()},120);const q=document.act
 function mount(el,backend){B=backend;root=el;S=fresh();F={};UI={cat:'All',q:'',hf:'All',hp:'month',lb:'worker',mw:'my',shots:[],drawer:false,authTab:'login',ref:(new URLSearchParams(location.search).get('ref')||'').toUpperCase()};if(UI.ref)UI.authTab='reg';
  el.addEventListener('click',onClick);el.addEventListener('input',onInput);el.addEventListener('change',onChange);el.addEventListener('keydown',onKey);el.addEventListener('focusout',onFocusOut);
  unw.push(B.watch('settings',d=>{S.set=d;redraw()}));
- unAuth=B.onAuth(u=>{stopWatch2();S.ready=true;S.uid=u?u.uid:null;S.me=null;S.route=[['home']];F={};if(u){startWatch();setTimeout(()=>{if(S.uid&&!S.me&&B.ensureProfile)B.ensureProfile().catch(e=>{console.error(e);toast('Setup failed: '+(e.code||e.message),'err')})},1500);B.syncLb&&B.syncLb().catch(()=>{});B.pruneHist&&B.pruneHist(now()-30*DAY).catch(()=>{});setTimeout(()=>B.markRead&&0,0)}draw()});
+ unAuth=B.onAuth(u=>{stopWatch2();S.ready=true;S.uid=u?u.uid:null;S.me=null;S.meLoaded=false;S.route=[['home']];F={};if(u){startWatch();setTimeout(()=>{if(S.uid&&!S.me&&B.ensureProfile)B.ensureProfile().catch(e=>{console.error(e);toast('Setup failed: '+(e.code||e.message),'err')})},1500);B.syncLb&&B.syncLb().catch(()=>{});B.pruneHist&&B.pruneHist(now()-30*DAY).catch(()=>{});setTimeout(()=>B.markRead&&0,0)}draw()});
  timer=setInterval(()=>{if(S.uid){after('mySubs');redraw()}},30000);draw()}
 function stopWatch2(){const keep=unw.shift();stopWatch();unw=[keep]}
 function unmount(){stopWatch();unw=[];if(unAuth)unAuth();clearInterval(timer);if(root){root.removeEventListener('click',onClick);root.removeEventListener('input',onInput);root.removeEventListener('change',onChange);root.removeEventListener('keydown',onKey);root.removeEventListener('focusout',onFocusOut);root.innerHTML=''}root=null}
