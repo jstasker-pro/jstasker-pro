@@ -152,3 +152,12 @@ code{background:var(--soft);padding:1px 5px;border-radius:5px;font-size:12px}
 .shot span{display:block;font-size:12px;margin-top:2px}
 @media(prefers-reduced-motion:reduce){.ticker span{animation:none;padding-left:8px}}
 .nav .dot{position:absolute;top:3px;left:calc(50% + 6px);min-width:16px;height:16px;border-radius:9px;background:var(--bad);color:#fff;font-size:10px;display:grid;place-items:center;padding:0 3px}
+
+.pwbox{position:relative}.pwbox .in{padding-right:48px}
+.eyeb{position:absolute;right:4px;top:50%;transform:translateY(-50%);width:40px;height:40px;border:0;background:none;color:var(--mut);display:flex;align-items:center;justify-content:center;border-radius:10px;cursor:pointer;font-size:22px;font-weight:700}
+.eyeb svg{width:20px;height:20px}.eyeb.on{color:var(--g2)}
+.capone{display:flex;align-items:center;gap:8px;padding:4px 4px 4px 12px}.capone:focus-within{border-color:var(--g2)}
+.capone input{flex:1;min-width:0;border:0;background:none;outline:none;font:inherit;color:var(--tx);padding:8px 4px;font-size:16px}
+.recap{width:40px;height:40px;border:0;background:none;color:var(--g2);font-size:22px;font-weight:700;border-radius:10px;cursor:pointer;flex:none}
+.capimg{display:flex;align-items:center;justify-content:center;gap:6px;height:38px;padding:0 10px;border-radius:9px;user-select:none;-webkit-user-select:none;pointer-events:none;background:repeating-linear-gradient(115deg,var(--card) 0 7px,rgba(0,190,160,.16) 7px 9px),var(--card);flex:none}
+.capimg i{font-style:normal;font-weight:800;letter-spacing:1px;color:var(--tx);font-family:ui-monospace,Menlo,monospace}
