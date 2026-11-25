@@ -31,7 +31,7 @@ const DEFAULTS={
  depRate:130,wdRate:123,minDep:1,minWd:1,wdPerDay:3,
  depFeePct:1,taskFeePct:5,workerFeePct:2,wdFeePct:10,
  refOn:true,refPct:10,refBonusOn:true,refNeed:10,refBonus:0.05,refCap:'Join JS TASKER PRO and earn money by completing tasks! {link}',
- boost:0.5,topJob:0.5,minP1:0.01,minP2:0.02,minP3:0.03,
+ boost:0.5,topJob:0.5,wdDays:3,wdLateMsg:'Due to the high volume of withdrawal requests, your withdrawal could not be processed in time. We are sorry for the delay and thank you for staying with us. Your amount has been refunded to your account. Please try again.',minP1:0.01,minP2:0.02,minP3:0.03,
  cats:['YouTube','Telegram','TikTok','Facebook','Instagram'],
  types:[{id:'yt_watch',cat:'YouTube',name:'Watch video',min:0.01,pm:0.005,mins:[3,6,10]},{id:'yt_sub',cat:'YouTube',name:'Subscribe to channel',min:0.02,pm:0,mins:[]},{id:'yt_like',cat:'YouTube',name:'Like / comment',min:0.01,pm:0,mins:[]},
   {id:'tg_ch',cat:'Telegram',name:'Join channel',min:0.015,pm:0,mins:[]},{id:'tg_gr',cat:'Telegram',name:'Join group',min:0.015,pm:0,mins:[]},{id:'tg_bot',cat:'Telegram',name:'Bot refer',min:0.025,pm:0,mins:[]},
