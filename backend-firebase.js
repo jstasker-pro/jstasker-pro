@@ -26,7 +26,7 @@ async function createProfile(id,username,ref){
  for(let attempt=0;attempt<4;attempt++){
   const cref=D('meta','counter');let c=await cref.get();if(!c.exists){await cref.set({n:1});c=await cref.get()}
   const n=c.data().n,code=genCode(),t=now();
-  const user={uid:id,name:username,username,jsId:jsFmt(n),jsNum:n,bio:'',phone:'',dep:0,earn:0,verified:false,done:0,spent:0,totalEarn:0,refBy:referrer,code,createdAt:t,banned:false};
+  const user={uid:id,name:username,username,jsId:jsFmt(n),jsNum:n,bio:'',phone:'',av:Math.floor(Math.random()*10),pic:'',dep:0,earn:0,verified:false,done:0,spent:0,totalEarn:0,refBy:referrer,code,createdAt:t,banned:false};
   const b=db.batch();b.set(D('users',id),user);b.update(cref,{n:n+1});b.set(D('codes',code),{uid:id});if(referrer)b.set(D('refs',id),{by:referrer,name:username,at:t});b.set(D('lb',id),{uid:id,name:username,jsId:user.jsId,earn:0,buyer:0,ref:0,verified:false});
   try{await b.commit();return}catch(e){if(attempt===3)throw e}
  }}
@@ -64,7 +64,7 @@ B.watch=(n,cb)=>{let q;try{q=Q[n]()}catch(e){return()=>{}}
 // ---------- user actions ----------
 const hist=(b,k,t,a,st)=>{b.set(D('hist',rid()),{uid:uid(),k,t,a:r4(a),st:st||'approved',at:now()})};
 const notifTo=(b,to,t)=>{b.set(D('notifs',rid()),{uid:to,from:uid(),t:String(t).slice(0,280),at:now(),read:false})};
-B.syncLb=async()=>{try{const u=await myDoc();const refs=await col('refs').where('by','==',u.uid).get();await D('lb',u.uid).set({uid:u.uid,name:u.name,jsId:u.jsId,earn:r4(u.totalEarn||0),buyer:r4(u.spent||0),ref:refs.size,verified:!!u.verified})}catch(e){console.warn('lb',e.code)}};
+B.syncLb=async()=>{try{const u=await myDoc();const refs=await col('refs').where('by','==',u.uid).get();await D('lb',u.uid).set({uid:u.uid,name:u.name,jsId:u.jsId,earn:r4(u.totalEarn||0),buyer:r4(u.spent||0),ref:refs.size,verified:!!u.verified,av:(u.av!=null?u.av:(u.jsNum||0)%10),pic:u.pic||''})}catch(e){console.warn('lb',e.code)}};
 const lbLater=()=>setTimeout(()=>B.syncLb(),600);
 B.createTask=async f=>{const S=await settings(),u=await myDoc();if(u.banned)throw new Error('Account suspended');if(f.price<minPrice(S,f.shots)-1e-9)throw new Error('Minimum price is '+usd(minPrice(S,f.shots)));
  const cost=taskCost(S,f.price,f.workers,f.days,f.boost,f.top);if(cost>u.dep+1e-9)throw new Error('Not enough deposit balance. Need '+usd(cost));
