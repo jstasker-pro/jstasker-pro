@@ -53,3 +53,35 @@ function showImg(src){const m=document.createElement('div');m.className='modal';
 function compressImage(file,cb,max){const r=new FileReader();r.onload=()=>{const im=new Image();im.onload=()=>{const c=document.createElement('canvas');const k=Math.min(1,(max||720)/Math.max(im.width,im.height));c.width=im.width*k;c.height=im.height*k;c.getContext('2d').drawImage(im,0,0,c.width,c.height);let q=.6,d=c.toDataURL('image/jpeg',q);while(d.length>260000&&q>.25){q-=.1;d=c.toDataURL('image/jpeg',q)}cb(d)};im.onerror=()=>toast('Could not read image','err');im.src=r.result};r.readAsDataURL(file)}
 function pickImage(cb){const fi=document.createElement('input');fi.type='file';fi.accept='image/*';fi.onchange=()=>{const f=fi.files[0];if(f)compressImage(f,cb)};fi.click()}
 const copyText=t=>{try{navigator.clipboard.writeText(t)}catch(e){const a=document.createElement('textarea');a.value=t;document.body.appendChild(a);a.select();try{document.execCommand('copy')}catch(x){}a.remove()}toast('Copied','ok')};
+
+// ---------- avatars ----------
+const AVS=[
+ {b:['#7c3aed','#a78bfa'],skin:'#f1c9a5',hair:'#2b1b12',shirt:'#fbbf24',st:'short'},
+ {b:['#0ea5e9','#67e8f9'],skin:'#c68642',hair:'#1b1b1b',shirt:'#f43f5e',st:'long'},
+ {b:['#f97316','#fdba74'],skin:'#8d5524',hair:'#111827',shirt:'#22c55e',st:'curly'},
+ {b:['#10b981','#6ee7b7'],skin:'#e0ac69',hair:'#3b2a1f',shirt:'#6366f1',st:'cap'},
+ {b:['#ec4899','#f9a8d4'],skin:'#f1c9a5',hair:'#7c2d12',shirt:'#0ea5e9',st:'bun'},
+ {b:['#4f46e5','#818cf8'],skin:'#c68642',hair:'#e5e7eb',shirt:'#10b981',st:'scarf'},
+ {b:['#14b8a6','#5eead4'],skin:'#8d5524',hair:'#0f172a',shirt:'#f59e0b',st:'beard'},
+ {b:['#ef4444','#fca5a5'],skin:'#e0ac69',hair:'#92400e',shirt:'#1d4ed8',st:'bob'},
+ {b:['#84cc16','#d9f99d'],skin:'#f1c9a5',hair:'#f59e0b',shirt:'#7c3aed',st:'spiky'},
+ {b:['#3b82f6','#93c5fd'],skin:'#c68642',hair:'#ffffff',shirt:'#0f766e',st:'kufi'}];
+const _avc={};
+function avSvg(i){const c=AVS[((i%10)+10)%10],h=c.hair,k=c.skin;let back='',front='';
+ const fringe='<path d="M20 28C20 15 44 15 44 28C40 22 24 22 20 28Z" fill="'+h+'"/>';
+ switch(c.st){
+  case 'short':front=fringe;break;
+  case 'long':back='<rect x="17" y="18" width="30" height="36" rx="13" fill="'+h+'"/>';front=fringe;break;
+  case 'curly':front=[[22,22],[28,16],[36,16],[42,22],[20,29],[44,29]].map(p=>'<circle cx="'+p[0]+'" cy="'+p[1]+'" r="6.5" fill="'+h+'"/>').join('');break;
+  case 'cap':front='<path d="M19 28C19 13 45 13 45 28Z" fill="'+h+'"/><rect x="29" y="26" width="19" height="4" rx="2" fill="'+h+'"/>';break;
+  case 'bun':front=fringe+'<circle cx="32" cy="13" r="5.5" fill="'+h+'"/>';break;
+  case 'scarf':back='<ellipse cx="32" cy="32" rx="18" ry="21" fill="'+h+'"/>';front='<path d="M19 28C21 15 43 15 45 28C41 22 23 22 19 28Z" fill="'+h+'"/>';break;
+  case 'beard':front=fringe+'<path d="M20.5 32C20.5 48 43.5 48 43.5 32C40 39 24 39 20.5 32Z" fill="'+h+'"/>';break;
+  case 'bob':back='<rect x="18" y="19" width="28" height="25" rx="11" fill="'+h+'"/>';front=fringe;break;
+  case 'spiky':front='<path d="M20 28L22 13L27 21L32 11L37 21L42 13L44 28C40 22 24 22 20 28Z" fill="'+h+'"/>';break;
+  case 'kufi':front='<path d="M20 24C20 11 44 11 44 24Z" fill="'+h+'"/><path d="M22 20h20" stroke="'+c.b[0]+'" stroke-width="1.6"/>';break}
+ return '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64"><defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="'+c.b[0]+'"/><stop offset="1" stop-color="'+c.b[1]+'"/></linearGradient></defs><rect width="64" height="64" fill="url(#g)"/>'+back+'<path d="M8 66C8 51 20 46 32 46C44 46 56 51 56 66Z" fill="'+c.shirt+'"/><rect x="28" y="38" width="8" height="10" rx="3" fill="'+k+'"/><ellipse cx="32" cy="30" rx="12" ry="13" fill="'+k+'"/>'+front+'<circle cx="27.5" cy="31" r="1.7" fill="#1f2937"/><circle cx="36.5" cy="31" r="1.7" fill="#1f2937"/><path d="M28 37Q32 40.5 36 37" stroke="#1f2937" stroke-width="1.6" fill="none" stroke-linecap="round"/></svg>'}
+const avUri=i=>_avc[i]||(_avc[i]='data:image/svg+xml;utf8,'+encodeURIComponent(avSvg(i)).replace(/'/g,'%27'));
+const avIdx=u=>(u&&u.av!=null&&u.av>=0)?(u.av%10):(((u&&u.jsNum)||0)%10);
+const avatar=(u,cls,st)=>'<div class="av '+(cls||'')+'" style="background-image:url(\''+((u&&u.pic)?u.pic:avUri(avIdx(u)))+'\');'+(st||'')+'"></div>';
+function avatarFromFile(f){return new Promise((res,rej)=>{const url=URL.createObjectURL(f),im=new Image();im.onload=()=>{try{const S=112,c=document.createElement('canvas');c.width=c.height=S;const x=c.getContext('2d'),m=Math.min(im.width,im.height);x.drawImage(im,(im.width-m)/2,(im.height-m)/2,m,m,0,0,S,S);let q=.7,d=c.toDataURL('image/jpeg',q);while(d.length>14000&&q>.25){q-=.12;d=c.toDataURL('image/jpeg',q)}URL.revokeObjectURL(url);res(d)}catch(e){rej(e)}};im.onerror=()=>rej(new Error('bad image'));im.src=url})}
