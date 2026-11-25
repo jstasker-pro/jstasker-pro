@@ -33,6 +33,11 @@ const DEFAULTS={
  refOn:true,refPct:10,refBonusOn:true,refNeed:10,refBonus:0.05,refCap:'Join JS TASKER PRO and earn money by completing tasks! {link}',
  boost:0.5,topJob:0.5,minP1:0.01,minP2:0.02,minP3:0.03,
  cats:['YouTube','Telegram','TikTok','Facebook','Instagram'],
+ types:[{id:'yt_watch',cat:'YouTube',name:'Watch video',min:0.01,pm:0.005,mins:[3,6,10]},{id:'yt_sub',cat:'YouTube',name:'Subscribe to channel',min:0.02,pm:0,mins:[]},{id:'yt_like',cat:'YouTube',name:'Like / comment',min:0.01,pm:0,mins:[]},
+  {id:'tg_ch',cat:'Telegram',name:'Join channel',min:0.015,pm:0,mins:[]},{id:'tg_gr',cat:'Telegram',name:'Join group',min:0.015,pm:0,mins:[]},{id:'tg_bot',cat:'Telegram',name:'Bot refer',min:0.025,pm:0,mins:[]},
+  {id:'tt_fol',cat:'TikTok',name:'Follow account',min:0.015,pm:0,mins:[]},{id:'tt_like',cat:'TikTok',name:'Like / comment',min:0.01,pm:0,mins:[]},
+  {id:'fb_page',cat:'Facebook',name:'Like / follow page',min:0.015,pm:0,mins:[]},{id:'fb_post',cat:'Facebook',name:'Like / comment post',min:0.01,pm:0,mins:[]},
+  {id:'ig_fol',cat:'Instagram',name:'Follow account',min:0.015,pm:0,mins:[]},{id:'ig_like',cat:'Instagram',name:'Like / comment',min:0.01,pm:0,mins:[]}],
  methods:[{id:'bkash',name:'Bkash',col:'#fbcfe8',num:'01XXXXXXXXX',bonus:0,on:true},{id:'nagad',name:'Nagad',col:'#fed7aa',num:'01XXXXXXXXX',bonus:0,on:true},{id:'rocket',name:'Rocket',col:'#e9d5ff',num:'01XXXXXXXXX',bonus:0,on:true},{id:'binance',name:'Binance',col:'#fef08a',num:'Binance Pay ID 000000',bonus:0,on:true},{id:'usdt',name:'USDT',col:'#bbf7d0',num:'USDT (TRC20) wallet address',bonus:0,on:true}],
  workerOpts:[100,200,500,1000,2000],dayOpts:[3,5,10],
  socTg:'',socFb:'',socX:'',socYt:'',stJobs:0,stMembers:0,stDone:0,stPaid:0,activity:'',
@@ -41,8 +46,13 @@ const DEFAULTS={
  pgRefund:'Deposits are used to fund tasks. Money held for a task that is closed or removed is returned to your deposit balance. Contact support for any other refund request.',
  pgContact:'Need help? Open a ticket from the Tickets page after logging in, or message us on Telegram.'
 };
+Object.assign(DEFAULTS,typeMaps(DEFAULTS.types));
 const withDefaults=s=>Object.assign({},DEFAULTS,s||{});
 const minPrice=(set,shots)=>set['minP'+shots]||0.01;
+function typeMaps(ts){const a={},b={};(ts||[]).forEach(t=>{a[t.id]=+t.min||0;if(+t.pm>0)b[t.id]=+t.pm});return{tMin:a,tPm:b}}
+const typeOf=(set,id)=>(set.types||[]).find(t=>t.id===id);
+const typeMin=(set,id,mins)=>{const m=set.tMin||{},p=set.tPm||{};return r4(p[id]>0?p[id]*(mins||0):(m[id]||0))};
+const minFor=(set,id,mins,shots)=>Math.max(minPrice(set,shots),typeMin(set,id,mins));
 const taskCost=(set,price,workers,days,boost,top)=>r4(price*workers*(1+set.taskFeePct/100)+(boost?set.boost:0)+(top?set.topJob*days:0));
 const level=done=>1+Math.floor((done||0)/10);
 const USER_RE=/^[a-z0-9_]{3,20}$/;
