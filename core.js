@@ -51,7 +51,7 @@ const withDefaults=s=>Object.assign({},DEFAULTS,s||{});
 const minPrice=(set,shots)=>set['minP'+shots]||0.01;
 function genJsId(){const a=new Uint32Array(2);(window.crypto||{getRandomValues:x=>{x[0]=Math.random()*4294967296;x[1]=Math.random()*4294967296}}).getRandomValues(a);return String(1+a[0]%9)+String(a[1]%10000000).padStart(7,'0')}
 const defName=id=>'User'+String(id).slice(-4);
-const pwErr=(pw,un)=>(String(pw).length<6||!/[a-z]/.test(pw)||!/[A-Z]/.test(pw))?'Password must be at least 6 characters with a capital and a small letter (example: Korim12 or Korim@#)':(String(pw).toLowerCase()===String(un).toLowerCase()?'Password cannot be the same as your username':'');
+const pwErr=(pw,un)=>(String(pw).length<6||!/[a-z]/.test(pw)||!/[A-Z]/.test(pw))?'Password must be at least 6 characters with a capital and a small letter':(String(pw).toLowerCase()===String(un).toLowerCase()?'Password cannot be the same as your username':'');
 const linkKey=u=>String(u||'').trim().toLowerCase().replace(/^https?:\/\//,'').replace(/^www\./,'').replace(/[?#].*$/,'').replace(/\/+$/,'');
 function hash64(s){let a=0x811c9dc5,b=0x1b873593;for(let i=0;i<s.length;i++){const c=s.charCodeAt(i);a=Math.imul(a^c,16777619);b=Math.imul(b+c,2246822519)^(b>>>13)}return 'p'+(a>>>0).toString(16).padStart(8,'0')+(b>>>0).toString(16).padStart(8,'0')+s.length.toString(16)}
 function typeMaps(ts){const a={},b={};(ts||[]).forEach(t=>{a[t.id]=+t.min||0;if(+t.pm>0)b[t.id]=+t.pm});return{tMin:a,tPm:b}}
