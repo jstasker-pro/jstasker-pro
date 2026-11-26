@@ -20,8 +20,9 @@ function draw(){
  root.innerHTML=render();window.scrollTo(0,sc);
 }
 let rq=0;const redraw=()=>{cancelAnimationFrame(rq);rq=requestAnimationFrame(draw)};
-function go(r,a){if(r==='dhist'||r==='whist'){UI.hr='today';UI.hs='all'}S.route.push([r,a]);UI.drawer=false;F={};UI.shots=[];draw();window.scrollTo(0,0)}
-function top(r,a){S.route=[[r,a]];UI.drawer=false;F={};UI.shots=[];draw();window.scrollTo(0,0)}
+function resetView(r){if(r==='dhist'||r==='whist'){UI.hr='today';UI.hs='all'}if(r==='history'){UI.hp='today';UI.hf='All'}if(r==='leaders')UI.lb='worker';if(r==='mywork')UI.mw='my';if(r==='home'){UI.cat='All';UI.q=''}}
+function go(r,a){resetView(r);S.route.push([r,a]);UI.drawer=false;F={};UI.shots=[];draw();window.scrollTo(0,0)}
+function top(r,a){resetView(r);S.route=[[r,a]];UI.drawer=false;F={};UI.shots=[];draw();window.scrollTo(0,0)}
 function back(){if(S.route.length>1)S.route.pop();F={};UI.shots=[];draw()}
 function startWatch(){const w=(n,k)=>unw.push(B.watch(n,d=>{S[k||n]=d;if(n==='me')S.meLoaded=true;after(n);redraw()}));
  ['me','tasks','myTasks','mySubs','ownerSubs','deps','wds','notifs','hist','lb','tickets','refs','reflogs'].forEach(n=>w(n))}
@@ -251,7 +252,7 @@ function onInput(e){const t=e.target;if(!root.contains(t))return;if(t.id==='q'){
 function onChange(e){const t=e.target;if(!root.contains(t))return;if(t.dataset.c){F[t.dataset.c]=t.checked;draw()}if(t.dataset.sh){const i=+t.dataset.sh;F.shots=t.checked?i:Math.max(1,i-1);delete F.price;draw()}}
 function onKey(e){if(e.key==='Enter'){if(e.target.id==='q'){draw();return}if(e.target.id==='cin'){const b=root.querySelector('[data-a=reply]');if(b)b.click()}if(!S.uid&&e.target.dataset.f){const b=root.querySelector('[data-a=login],[data-a=register]');if(b)b.click()}}}
 function onFocusOut(){setTimeout(()=>{if(dirty)draw()},120);const q=document.activeElement}
-function mount(el,backend){window.addEventListener('popstate',()=>{if(!root||S.uid)return;if(UI.page){UI.page=null;draw();return}if(UI.authOpen){UI.authOpen=false;draw();window.scrollTo(0,0)}});B=backend;root=el;S=fresh();F={};UI={cat:'All',q:'',hf:'All',hp:'month',lb:'worker',mw:'my',shots:[],drawer:false,authTab:'login',ref:(new URLSearchParams(location.search).get('ref')||'').toUpperCase()};
+function mount(el,backend){window.addEventListener('popstate',()=>{if(!root||S.uid)return;if(UI.page){UI.page=null;draw();return}if(UI.authOpen){UI.authOpen=false;draw();window.scrollTo(0,0)}});B=backend;root=el;S=fresh();F={};UI={cat:'All',q:'',hf:'All',hp:'today',lb:'worker',mw:'my',shots:[],drawer:false,authTab:'login',ref:(new URLSearchParams(location.search).get('ref')||'').toUpperCase()};
  el.addEventListener('click',onClick);el.addEventListener('input',onInput);el.addEventListener('change',onChange);el.addEventListener('keydown',onKey);el.addEventListener('focusout',onFocusOut);
  unw.push(B.watch('settings',d=>{S.set=d;redraw()}));
  unAuth=B.onAuth(u=>{stopWatch2();S.ready=true;S.uid=u?u.uid:null;UI.drawer=false;if(u)UI.authOpen=false;S.me=null;S.meLoaded=false;S.route=[['home']];F={};if(u){startWatch();setTimeout(()=>{if(S.uid&&!S.me&&B.ensureProfile)B.ensureProfile().catch(e=>{console.error(e);toast('Setup failed: '+(e.code||e.message),'err')})},1500);B.syncLb&&B.syncLb().catch(()=>{});B.pruneHist&&B.pruneHist(now()-30*DAY).catch(()=>{});setTimeout(()=>B.markRead&&0,0)}draw()});
