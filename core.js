@@ -28,7 +28,7 @@ const DEFAULTS={
  terms:'• Complete tasks honestly. Fake, edited or reused proofs lead to a permanent ban.\n• Upload exactly the number of screenshots the task asks for.\n• Buyers must review proofs fairly. A rejection needs a clear reason.\n• Proofs that are not reviewed in time are approved automatically and the worker is paid.\n• Deposits and withdrawals are processed manually.',
  maint:false,chatOn:false,botLink:'https://t.me/YourSupportBot',
  verifyOn:true,verifyFee:1,verifyFrom:'dep',kycWd:false,
- depRate:130,wdRate:123,minDep:1,minWd:1,wdPerDay:3,
+ depRate:130,wdRate:123,minDep:1,minWd:1,wdPerDay:3,depPerDay:3,depCap:'Due to a high number of deposit requests, processing may take a little longer. Please be patient. Thank you for your cooperation.',wdCap:'Due to a high number of withdrawal requests, processing may take a little longer. Please be patient. Thank you for your cooperation.',depShotCap:'Upload a clear screenshot of your payment. The Transaction ID and amount must be visible.',
  depFeePct:1,taskFeePct:5,workerFeePct:2,wdFeePct:10,
  refOn:true,refPct:10,refBonusOn:true,refNeed:10,refBonus:0.05,refCap:'Join JS TASKER PRO and earn money by completing tasks! {link}',
  boost:0.5,topJob:0.5,wdDays:3,maxAcc:2,wdWaitH:24,wdMax:100,refDepPct:2,wdLateMsg:'Due to the high volume of withdrawal requests, your withdrawal could not be processed in time. We are sorry for the delay and thank you for staying with us. Your amount has been refunded to your account. Please try again.',minP1:0.01,minP2:0.02,minP3:0.03,
