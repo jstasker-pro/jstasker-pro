@@ -22,16 +22,16 @@ B.onAuth=cb=>auth.onAuthStateChanged(u=>cb(isUser(u)?{uid:u.uid,username:u.email
 B.ensureProfile=async()=>{const u=auth.currentUser;if(!isUser(u))return;await createProfile(u.uid,u.email.split('@')[0],null)};
 const devId=()=>{try{let d=localStorage.getItem('jsp_dev');if(!d||d.length<16){d='d'+Math.random().toString(36).slice(2)+Math.random().toString(36).slice(2)+Date.now().toString(36);localStorage.setItem('jsp_dev',d)}return d}catch(e){return 'd'+Math.random().toString(36).slice(2)+Date.now().toString(36)}};
 async function createProfile(id,username,ref){
- if((await D('users',id).get()).exists)return;
+ const ex=await D('users',id).get();
+ if(ex.exists){const d=ex.data();if(d.name&&d.username&&String(d.name).toLowerCase()===String(d.username).toLowerCase()){const nm=defName(d.jsId);try{await D('users',id).update({name:nm});await D('lb',id).set({name:nm},{merge:true});if(d.refBy)await D('refs',id).update({name:nm}).catch(()=>{})}catch(e){console.warn('rename',e)}}return}
  let referrer=null;if(ref){try{const c=await D('codes',String(ref).toUpperCase()).get();if(c.exists&&c.data().uid!==id)referrer=c.data().uid}catch(e){}}
- for(let attempt=0;attempt<4;attempt++){
-  const cref=D('meta','counter');let c=await cref.get();if(!c.exists){await cref.set({n:1});c=await cref.get()}
-  const n=c.data().n,code=genCode(),t=now();
-  const user={uid:id,name:username,username,jsId:jsFmt(n),jsNum:n,bio:'',phone:'',av:Math.floor(Math.random()*10),pic:'',dep:0,earn:0,verified:false,done:0,spent:0,totalEarn:0,refBy:referrer,code,createdAt:t,banned:false,terms:true,dev:devId()};
-  const dv=D('devs',devId()),dsn=await dv.get();const b=db.batch();if(dsn.exists)b.update(dv,{n:(dsn.data().n||0)+1});else b.set(dv,{n:1});b.set(D('users',id),user);b.update(cref,{n:n+1});b.set(D('codes',code),{uid:id});if(referrer)b.set(D('refs',id),{by:referrer,name:username,at:t});b.set(D('lb',id),{uid:id,name:username,jsId:user.jsId,earn:0,buyer:0,ref:0,verified:false});
-  try{await b.commit();return}catch(e){if(attempt===3)throw e}
+ for(let attempt=0;attempt<6;attempt++){
+  const jsId=genJsId(),code=genCode(),t=now(),nm=defName(jsId);
+  const user={uid:id,name:nm,username,jsId,jsNum:+jsId,bio:'',phone:'',av:Math.floor(Math.random()*10),pic:'',dep:0,earn:0,verified:false,done:0,spent:0,totalEarn:0,refBy:referrer,code,createdAt:t,banned:false,terms:true,dev:devId()};
+  const dv=D('devs',devId()),dsn=await dv.get();const b=db.batch();if(dsn.exists)b.update(dv,{n:(dsn.data().n||0)+1});else b.set(dv,{n:1});b.set(D('users',id),user);b.set(D('jsid',jsId),{uid:id});b.set(D('codes',code),{uid:id});if(referrer)b.set(D('refs',id),{by:referrer,name:nm,at:t});b.set(D('lb',id),{uid:id,name:nm,jsId,earn:0,buyer:0,ref:0,verified:false});
+  try{await b.commit();return}catch(e){if(attempt===5)throw e}
  }}
-B.register=async(username,pass,ref)=>{let cred;{const S=await settings();const dd=await D('devs',devId()).get().catch(()=>null);if(dd&&dd.exists&&(dd.data().n||0)>=(S.maxAcc||2))throw new Error('Too many accounts have been created on this device.')}try{cred=await auth.createUserWithEmailAndPassword(username+DOM,pass)}catch(e){
+B.register=async(username,pass,ref)=>{let cred;{const e=pwErr(pass,username);if(e)throw new Error(e)}{const S=await settings();const dd=await D('devs',devId()).get().catch(()=>null);if(dd&&dd.exists&&(dd.data().n||0)>=(S.maxAcc||2))throw new Error('Too many accounts have been created on this device.')}try{cred=await auth.createUserWithEmailAndPassword(username+DOM,pass)}catch(e){
  if(e.code==='auth/email-already-in-use')throw new Error('That username is already taken.');if(e.code==='auth/weak-password')throw new Error('Password must be at least 6 characters.');if(e.code==='auth/operation-not-allowed')throw new Error('Sign-up is not enabled yet (owner: enable Email/Password in Firebase Authentication).');throw new Error('Could not register: '+(e.code||e.message))}
  try{await createProfile(cred.user.uid,username,ref)}catch(e){console.error(e);throw new Error('Account created but profile setup failed ('+(e.code||e.message)+'). Please log in again.')}};
 B.login=async(username,pass)=>{let cred;try{cred=await auth.signInWithEmailAndPassword(username+DOM,pass)}catch(e){
@@ -129,6 +129,7 @@ B.adm={
  approveTask:async id=>{await db.runTransaction(async tx=>{const r=D('tasks',id),s=await tx.get(r);const t=s.data();if(!t||t.status!=='review')throw new Error('Already processed');const n=now();tx.update(r,{status:'active',created:n,expiry:n+t.days*DAY,boostUntil:t.bst?n+DAY:0});adminNotif(tx,t.owner,'Your task "'+t.title+'" was approved and is now live.')})},
  rejectTask:async(id,why)=>{await db.runTransaction(async tx=>{const r=D('tasks',id),s=await tx.get(r);const t=s.data();if(!t||t.status!=='review')throw new Error('Already processed');tx.update(r,{status:'rejected',reason:why});tx.update(D('users',t.owner),{dep:FV.increment(t.cost),spent:FV.increment(-t.cost)});adminHist(tx,t.owner,'refund','Task rejected, refund: '+t.title,t.cost);adminNotif(tx,t.owner,'Your task "'+t.title+'" was rejected: '+why+'. Full amount '+usd(t.cost)+' was refunded to your deposit balance.')})},
  setUser:async(u,p)=>{await D('users',u).update(p);if('verified' in p)await D('lb',u).set({verified:p.verified},{merge:true}).catch(()=>{})},
+ newJsId:async uid=>{for(let i=0;i<8;i++){const id=genJsId();const r=D('jsid',id);if((await r.get()).exists)continue;const old=(await D('users',uid).get()).data();const b=db.batch();b.set(r,{uid});b.update(D('users',uid),{jsId:id,jsNum:+id});b.set(D('lb',uid),{jsId:id},{merge:true});if(old&&old.jsId&&String(old.jsId).length===8)b.delete(D('jsid',old.jsId));await b.commit();return id}throw new Error('Try again')},
  adjust:async(u,f,delta,note)=>{const b=db.batch();const p={};p[f]=FV.increment(delta);b.update(D('users',u),p);adminNotif(b,u,'Balance adjusted by admin: '+(delta>=0?'+':'-')+usd(Math.abs(delta))+(note?' ('+note+')':''));adminHist(b,u,'adj','Admin adjustment',delta);await b.commit()},
  taskPatch:(id,p)=>D('tasks',id).update(p),
  deleteTask:async id=>{const t=(await D('tasks',id).get()).data();const amt=r4(Math.max(0,(t.workers-t.done-t.pending)*t.price));const b=db.batch();b.update(D('users',t.owner),{dep:FV.increment(amt)});adminNotif(b,t.owner,'Your task "'+t.title+'" was removed by admin. Refund: '+usd(amt));b.delete(D('tasks',id));await b.commit()},
