@@ -3,7 +3,7 @@ window.AdminApp=(function(){
 const sw=new Set();let B,root,S,F,UI,unw=[],unAuth=null,dirty=false;
 const fresh=()=>({ready:false,admin:null,set:withDefaults(),users:[],tasks:[],subs:[],deps:[],wds:[],tickets:[],reports:[],alog:[],appeals:[],route:[['dash']]});
 const R=()=>S.route[S.route.length-1];
-const run=(fn,ok)=>async function(){try{const r=await fn.apply(null,arguments);if(ok)toast(ok,'ok');return r}catch(e){toast(e.message||'Failed','err');console.error(e)}};
+const run=(fn,ok,msg)=>async function(){busy(true,msg);try{const r=await fn.apply(null,arguments);if(ok)toast(ok,'ok');return r}catch(e){toast(e.message||'Failed','err');console.error(e)}finally{busy(false)}};
 function draw(){if(!root)return;const a=document.activeElement;if(a&&/INPUT|TEXTAREA|SELECT/.test(a.tagName)&&root.contains(a)&&a.type!=='checkbox'){dirty=true;return}dirty=false;document.body.classList.toggle('dark',localStorage.getItem('jsp_dark')==='1');const sc=window.scrollY;root.innerHTML=render();window.scrollTo(0,sc)}
 let rq=0;const redraw=()=>{cancelAnimationFrame(rq);rq=requestAnimationFrame(draw)};
 function go(r,a){S.route.push([r,a]);F={};draw();window.scrollTo(0,0)}
@@ -73,7 +73,7 @@ backup(){return head('Backup')+'<div class="pg"><div class="card"><h3>Export</h3
 };
 const A={
  back,top(el){top(el.dataset.v)},go(el){go(el.dataset.v,el.dataset.id)},stab(el){UI.stab=el.dataset.v;UI.ed=null;UI.edc=null;UI.edt=null;draw()},copy(el){copyText(el.dataset.v)},
- login(){run(()=>B.adm.login((F.em||'').trim(),F.pw||''))()},logout(){B.adm.logout()},
+ login(){run(()=>B.adm.login((F.em||'').trim(),F.pw||''),null,'Logging in…')()},logout(){run(()=>B.adm.logout(),null,'Logging out…')()},
  zoomsub(el){const s=S.appeals.find(x=>x.id===el.dataset.id);if(s)showImg(s.imgs[+el.dataset.i||0])},zoomdep(el){const d=S.deps.find(x=>x.id===el.dataset.id);if(d)showImg(d.img)},zoomimg(el){const s=S.subs.find(x=>x.id===el.dataset.src);if(s)showImg(s.imgs[0])},
  depok(el){const d=S.deps.find(x=>x.id===el.dataset.id);modal('<h3>Approve deposit</h3><p class="mut">'+esc(d.user)+' paid '+usd(d.amt)+' via '+esc(d.method)+'. Amount to credit:</p><input class="in" id="cr" type="number" step="0.01" value="'+d.credit+'">',async m=>{const v=+m.querySelector('#cr').value;if(!(v>0)){toast('Enter amount','err');return false}await run(()=>B.adm.approveDep(d.id,v),'Deposit approved')()},'Approve')},
  depno(el){const id=el.dataset.id;modal('<h3>Reject deposit</h3><input class="in" id="rr" placeholder="Reason">',async m=>{await run(()=>B.adm.rejectDep(id,m.querySelector('#rr').value.trim()||'Rejected'),'Rejected')()},'Reject')},
