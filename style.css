@@ -230,3 +230,5 @@ body.dark{--hg:#16244a;--bar:rgba(10,16,32,.92);--ico:#2a1c18;--gb:#2b3a5c;--ey:
 #busy{display:none;position:fixed;inset:0;z-index:999;background:rgba(10,20,40,.35);align-items:center;justify-content:center}#busy.on{display:flex}.bz{background:var(--card);color:var(--tx);padding:16px 22px;border-radius:16px;display:flex;align-items:center;gap:12px;font-weight:700;box-shadow:0 10px 30px rgba(0,0,0,.25)}.spn{width:22px;height:22px;border-radius:50%;border:3px solid rgba(0,0,0,.12);border-top-color:var(--g2);animation:spin .8s linear infinite}@keyframes spin{to{transform:rotate(360deg)}}
 
 .xph{cursor:pointer;gap:10px}.chev{color:var(--mut);font-size:14px;padding-left:4px}
+
+.bz{background:none!important;box-shadow:none!important;padding:0!important;color:#fff;font-size:20px;letter-spacing:.3px;text-shadow:0 1px 8px rgba(0,0,0,.45)}.bz .spn{display:none}
