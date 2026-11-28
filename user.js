@@ -33,7 +33,7 @@ function after(n){
  if(n==='reflogs'){S.reflogs.slice(0,15).forEach(l=>{if(!inflight.has('r'+l.id)){inflight.add('r'+l.id);B.claimRef(l.id).catch(e=>console.warn('ref',e)).finally(()=>setTimeout(()=>inflight.delete('r'+l.id),4000))}})}
 }
 let RUN=false;
-function waitAuth(){return new Promise(r=>{let n=0;const t=setInterval(()=>{if(S.uid||++n>120){clearInterval(t);r()}},100)})}
+function waitAuth(){return new Promise(r=>{let n=0;const t=setInterval(()=>{if((S.uid&&S.me)||++n>120){clearInterval(t);r()}},100)})}
 function bgSend(fn,ok){const sF=F,sS=(UI.shots||[]).slice(),sR=S.route.slice();const pr=fn();if(S.route.length>1)S.route.pop();F={};UI.shots=[];draw();toast('Sending…');pr.then(()=>toast(ok,'ok'),e=>{S.route=sR;F=sF;UI.shots=sS;draw();toast((e&&e.message)||'Failed','err');console.error(e)})}
 function run(fn,ok,msg){return async function(){if(RUN)return;RUN=true;busy(true,msg);try{const r=await fn.apply(null,arguments);if(ok)toast(ok,'ok');return r}catch(e){toast(e.message||'Something went wrong','err');console.error(e)}finally{busy(false);setTimeout(()=>{RUN=false},350)}}}
 // ---------- layout ----------
