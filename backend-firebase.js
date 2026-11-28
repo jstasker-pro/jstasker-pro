@@ -21,7 +21,9 @@ const genCode=()=>{const a='ABCDEFGHJKLMNPQRSTUVWXYZ23456789';let s='';for(let i
 B.onAuth=cb=>auth.onAuthStateChanged(u=>cb(isUser(u)?{uid:u.uid,username:u.email.split('@')[0]}:null));
 B.ensureProfile=async()=>{const u=auth.currentUser;if(!isUser(u))return;await createProfile(u.uid,u.email.split('@')[0],null)};
 const devId=()=>{try{let d=localStorage.getItem('jsp_dev');if(!d||d.length<16){d='d'+Math.random().toString(36).slice(2)+Math.random().toString(36).slice(2)+Date.now().toString(36);localStorage.setItem('jsp_dev',d)}return d}catch(e){return 'd'+Math.random().toString(36).slice(2)+Date.now().toString(36)}};
-async function createProfile(id,username,ref){
+const CPF={};
+function createProfile(id,username,ref){return CPF[id]||(CPF[id]=createProfile0(id,username,ref).finally(()=>{delete CPF[id]}))}
+async function createProfile0(id,username,ref){
  const ex=await D('users',id).get();
  if(ex.exists){const d=ex.data();if(d.name&&d.username&&String(d.name).toLowerCase()===String(d.username).toLowerCase()){const nm=defName(d.jsId);try{await D('users',id).update({name:nm});await D('lb',id).set({name:nm},{merge:true});if(d.refBy)await D('refs',id).update({name:nm}).catch(()=>{})}catch(e){console.warn('rename',e)}}return}
  let referrer=null;if(ref){try{const c=await D('codes',String(ref).toUpperCase()).get();if(c.exists&&c.data().uid!==id)referrer=c.data().uid}catch(e){}}
@@ -29,7 +31,7 @@ async function createProfile(id,username,ref){
   const jsId=genJsId(),code=genCode(),t=now(),nm=defName(jsId);
   const user={uid:id,name:nm,username,jsId,jsNum:+jsId,bio:'',phone:'',av:Math.floor(Math.random()*10),pic:'',dep:0,earn:0,verified:false,done:0,spent:0,totalEarn:0,refBy:referrer,code,createdAt:t,banned:false,terms:true,dev:devId()};
   const dv=D('devs',devId()),dsn=await dv.get();const b=db.batch();if(dsn.exists)b.update(dv,{n:(dsn.data().n||0)+1});else b.set(dv,{n:1});b.set(D('users',id),user);b.set(D('jsid',jsId),{uid:id});b.set(D('codes',code),{uid:id});if(referrer)b.set(D('refs',id),{by:referrer,name:nm,at:t});b.set(D('lb',id),{uid:id,name:nm,jsId,earn:0,buyer:0,ref:0,verified:false});
-  try{await b.commit();return}catch(e){if(attempt===5)throw e}
+  try{await b.commit();return}catch(e){try{if((await D('users',id).get()).exists)return}catch(x){}if(attempt===5)throw e}
  }}
 B.register=async(username,pass,ref)=>{let cred;{const e=pwErr(pass,username);if(e)throw new Error(e)}{const S=await settings();const dd=await D('devs',devId()).get().catch(()=>null);if(dd&&dd.exists&&(dd.data().n||0)>=(S.maxAcc||2))throw new Error('Too many accounts have been created on this device.')}try{cred=await auth.createUserWithEmailAndPassword(username+DOM,pass)}catch(e){
  if(e.code==='auth/email-already-in-use')throw new Error('That username is already taken.');if(e.code==='auth/weak-password')throw new Error('Password must be at least 6 characters.');if(e.code==='auth/operation-not-allowed')throw new Error('Sign-up is not enabled yet (owner: enable Email/Password in Firebase Authentication).');throw new Error('Could not register: '+(e.code||e.message))}
